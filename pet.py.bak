@@ -14,7 +14,7 @@ class Character:
         damage = max(self.physical - enemy.defense, 0)
         enemy.hp -= damage
         return damage
-
+    
     def is_alive(self):
         return self.hp > 0
 
