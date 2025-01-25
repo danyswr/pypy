@@ -11,4 +11,4 @@ def setup_game():
         messagebox.showerror("Error", "You must enter a name for your pet!")
         return None
 
-    return pet
+    return pet  
