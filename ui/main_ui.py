@@ -1,89 +1,88 @@
 import tkinter as tk
-from service.game_service import attack, defend
+from tkinter import simpledialog, messagebox
+from service.game_service import CharacterService
 from application.game_setup import setup_game
 
 class GameUI:
     def __init__(self, root):
         self.root = root
         self.root.title("Virtual Pet Game")
-        self.root.geometry("400x300")
 
-        self.player = None
-        self.enemy = None
+        # Setup awal game
+        self.character_service = None
+        self.character = None
 
-        self.player_hp_label = tk.Label(self.root, text="", font=("Arial", 12))
-        self.player_hp_label.pack()
+        self.setup_ui()
 
-        self.enemy_hp_label = tk.Label(self.root, text="", font=("Arial", 12))
-        self.enemy_hp_label.pack()
+    def setup_ui(self):
+        # Tombol untuk memulai permainan
+        self.start_button = tk.Button(self.root, text="Start Game", command=self.start_game)
+        self.start_button.pack(pady=10)
 
-        self.result_label = tk.Label(self.root, text="", font=("Arial", 14))
-        self.result_label.pack(pady=10)
+        # Label untuk status karakter
+        self.status_label = tk.Label(self.root, text="Character Status: Waiting to start game", font=("Arial", 12))
+        self.status_label.pack(pady=20)
 
-        self.attack_button = tk.Button(self.root, text="Attack", font=("Arial", 12), command=self.attack_enemy)
-        self.attack_button.pack(pady=5)
+        # Tombol untuk memberi makan
+        self.feed_button = tk.Button(self.root, text="Feed Pet", state="disabled", command=self.feed_pet)
+        self.feed_button.pack(pady=5)
 
-        self.defend_button = tk.Button(self.root, text="Defend", font=("Arial", 12), command=self.defend_enemy)
-        self.defend_button.pack(pady=5)
+        # Tombol untuk bermain
+        self.play_button = tk.Button(self.root, text="Play with Pet", state="disabled", command=self.play_with_pet)
+        self.play_button.pack(pady=5)
 
-        self.restart_button = tk.Button(self.root, text="Restart", font=("Arial", 12), command=self.restart_game)
-        self.restart_button.pack(pady=5)
+        # Tombol untuk beristirahat
+        self.rest_button = tk.Button(self.root, text="Rest Pet", state="disabled", command=self.rest_pet)
+        self.rest_button.pack(pady=5)
 
-        self.restart_game()
+    def start_game(self):
+        """Start the game and setup character"""
+        self.character = setup_game()
+        self.character_service = CharacterService(self.character.name)
+        
+        # Enable action buttons after the game is set up
+        self.feed_button.config(state="normal")
+        self.play_button.config(state="normal")
+        self.rest_button.config(state="normal")
 
-    def update_status(self, message, is_game_over=False):
-        self.player_hp_label.config(text=f"{self.player.name} HP: {max(self.player.hp, 0)}")
-        self.enemy_hp_label.config(text=f"{self.enemy.name} HP: {max(self.enemy.hp, 0)}")
-        self.result_label.config(text=message)
+        self.update_status()
 
-        if is_game_over:
-            self.attack_button.config(state="disabled")
-            self.defend_button.config(state="disabled")
+    def feed_pet(self):
+        """Feed the pet and update the UI"""
+        food_amount = simpledialog.askinteger("Feed Pet", "Enter food amount:")
+        if food_amount:
+            self.character_service.feed_character(food_amount)
+            self.update_status()
 
-    def attack_enemy(self):
-        if not self.player.is_alive() or not self.enemy.is_alive():
-            self.result_label.config(text="Game over. Restart to play again.")
-            return
+    def play_with_pet(self):
+        """Play with the pet and update the UI"""
+        play_time = simpledialog.askinteger("Play with Pet", "Enter play time:")
+        if play_time:
+            self.character_service.play_with_character(play_time)
+            self.update_status()
 
-        player_damage, enemy_defeated = attack(self.player, self.enemy)
-        self.update_status(f"{self.player.name} attacks {self.enemy.name} for {player_damage} damage!")
+    def rest_pet(self):
+        """Rest the pet and update the UI"""
+        rest_time = simpledialog.askinteger("Rest Pet", "Enter rest time:")
+        if rest_time:
+            self.character_service.rest_character(rest_time)
+            self.update_status()
 
-        if enemy_defeated:
-            self.update_status(f"{self.enemy.name} is defeated! {self.player.name} wins!", is_game_over=True)
-            return
+    def update_status(self):
+        """Update the status label"""
+        if self.character:
+            status = self.character_service._get_character_status()
+            status_text = f"Name: {status['name']}\n" \
+                          f"Hunger Level: {status['hunger_level']}\n" \
+                          f"Happiness Level: {status['happiness_level']}\n" \
+                          f"Energy Level: {status['energy_level']}"
+            self.status_label.config(text=status_text)
 
-        enemy_damage, player_defeated = attack(self.enemy, self.player)
-        self.update_status(f"{self.enemy.name} attacks {self.player.name} for {enemy_damage} damage!")
 
-        if player_defeated:
-            self.update_status(f"{self.player.name} is defeated! {self.enemy.name} wins!", is_game_over=True)
+def main():
+    root = tk.Tk()
+    game_ui = GameUI(root)
+    root.mainloop()
 
-    def defend_enemy(self):
-        if not self.player.is_alive() or not self.enemy.is_alive():
-            self.result_label.config(text="Game over. Restart to play again.")
-            return
-
-        damage_reduced, player_defeated = defend(self.player, self.enemy)
-        self.update_status(f"{self.player.name} defends, reducing damage by {damage_reduced}!")
-
-        if player_defeated:
-            self.update_status(f"{self.player.name} is defeated! {self.enemy.name} wins!", is_game_over=True)
-            return
-
-        enemy_damage, player_defeated = attack(self.enemy, self.player)
-        self.update_status(f"{self.enemy.name} counterattacks for {enemy_damage} damage!")
-
-        if player_defeated:
-            self.update_status(f"{self.player.name} is defeated! {self.enemy.name} wins!", is_game_over=True)
-
-    def restart_game(self):
-        self.player, self.enemy = setup_game()
-        if not self.player or not self.enemy:
-            self.root.destroy()
-            return
-
-        self.player_hp_label.config(text=f"{self.player.name} HP: {self.player.hp}")
-        self.enemy_hp_label.config(text=f"{self.enemy.name} HP: {self.enemy.hp}")
-        self.result_label.config(text="Game started! Choose your action.")
-        self.attack_button.config(state="normal")
-        self.defend_button.config(state="normal")
+if __name__ == "__main__":
+    main()
