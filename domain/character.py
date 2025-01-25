@@ -1,8 +1,6 @@
 class Character:
-    def __init__(self, name, species, age, hunger_level=0, happiness_level=100, energy_level=100):
+    def __init__(self, name, hunger_level=0, happiness_level=100, energy_level=100):
         self.name = name
-        self.species = species
-        self.age = age
         self.hunger_level = hunger_level
         self.happiness_level = happiness_level
         self.energy_level = energy_level
