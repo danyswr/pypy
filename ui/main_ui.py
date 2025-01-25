@@ -1,5 +1,5 @@
 import tkinter as tk
-from tkinter import simpledialog, messagebox
+from tkinter import messagebox
 from service.game_service import CharacterService
 from application.game_setup import setup_game
 
@@ -48,35 +48,30 @@ class GameUI:
         self.update_status()
 
     def feed_pet(self):
-        """Feed the pet and update the UI"""
-        food_amount = simpledialog.askinteger("Feed Pet", "Enter food amount:")
-        if food_amount:
-            self.character_service.feed_character(food_amount)
-            self.update_status()
+        """Feed the pet and update the UI with random amount"""
+        status = self.character_service.feed_character()
+        self.update_status(status)
 
     def play_with_pet(self):
-        """Play with the pet and update the UI"""
-        play_time = simpledialog.askinteger("Play with Pet", "Enter play time:")
-        if play_time:
-            self.character_service.play_with_character(play_time)
-            self.update_status()
+        """Play with the pet and update the UI with random play time"""
+        status = self.character_service.play_with_character()
+        self.update_status(status)
 
     def rest_pet(self):
-        """Rest the pet and update the UI"""
-        rest_time = simpledialog.askinteger("Rest Pet", "Enter rest time:")
-        if rest_time:
-            self.character_service.rest_character(rest_time)
-            self.update_status()
+        """Rest the pet and update the UI with random rest time"""
+        status = self.character_service.rest_character()
+        self.update_status(status)
 
-    def update_status(self):
+    def update_status(self, status=None):
         """Update the status label"""
-        if self.character:
+        if not status:
             status = self.character_service._get_character_status()
-            status_text = f"Name: {status['name']}\n" \
-                          f"Hunger Level: {status['hunger_level']}\n" \
-                          f"Happiness Level: {status['happiness_level']}\n" \
-                          f"Energy Level: {status['energy_level']}"
-            self.status_label.config(text=status_text)
+        
+        status_text = f"Name: {status['name']}\n" \
+                      f"Hunger Level: {status['hunger_level']}\n" \
+                      f"Happiness Level: {status['happiness_level']}\n" \
+                      f"Energy Level: {status['energy_level']}"
+        self.status_label.config(text=status_text)
 
 
 def main():
